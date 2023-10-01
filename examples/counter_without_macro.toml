@@ -1,0 +1,3 @@
+description="This example is the same like the counter but it's written without using macros and can be build with stable Rust."
+
+features=[]

@@ -1,0 +1,4 @@
+description = """
+A simpler counter component.
+"""
+features = ["nightly"]
