@@ -1,6 +1,6 @@
 **leptos by example**
 
-[the website](github.io/rambip/leptos-by-example)
+[the website](https://github.io/rambip/leptos-by-example)
 
 # Goal
 The goal of this project is you teach [leptos](leptos.dev) to the most novice (yet motivated) programmer.
