@@ -15,4 +15,4 @@ The examples proposed here are:
 
 # Help me out !
 I can't grow this project alone.
-See [./CONTRIBUTING.md][./CONTRIBUTING.md]
+See [CONTRIBUTING](./CONTRIBUTING.md)
