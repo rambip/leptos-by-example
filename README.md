@@ -3,7 +3,7 @@
 [the website](https://rambip.github.io/leptos-by-example)
 
 # Goal
-The goal of this project is you teach [leptos](leptos.dev) to the most novice (yet motivated) programmer.
+The goal of this project is to teach [leptos](leptos.dev) to the most novice (yet motivated) programmer.
 
 The examples proposed here are:
 - easily navigable: just search a keyword with the seach bar
