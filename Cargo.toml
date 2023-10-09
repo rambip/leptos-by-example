@@ -16,6 +16,8 @@ syntect = { version = "5.0.0", default-features = false, features = ["default-fa
 thiserror = "1.0.49"
 uuid = {version="1.4.1", features= ["v4", "js", "serde"]}
 web-sys = { version = "0.3.60", features = ["Storage"] }
+getrandom = { version = "0.2", features = ["js"] }
+
 
 [build-dependencies]
 prettyplease = "0.2.15"

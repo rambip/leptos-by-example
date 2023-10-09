@@ -788,6 +788,7 @@ version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "fuzzy-matcher",
+ "getrandom",
  "leptos",
  "prettyplease",
  "proc-macro2",

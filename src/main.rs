@@ -6,6 +6,8 @@ use examples::{examples, Examples};
 mod fuzzy;
 use fuzzy::FuzzyFinder;
 
+use getrandom::getrandom;
+
 
 struct Example {
     pub highlighted_source: &'static str,
@@ -54,11 +56,28 @@ fn Showcase(examples: StoredValue<Examples>, current: ReadSignal<usize>) -> impl
     }
 }
 
+fn random_small_int(n: usize) -> usize {
+    let mut buf: &mut [u8] = &mut [0,0];
+    getrandom(buf).unwrap();
+    let (a,b) = (buf[0] as usize, buf[1] as usize);
+    (a*256 + b) % n
+}
+
+#[component]
+fn RandomSelector(choice: WriteSignal<usize>, n: usize) -> impl IntoView {
+    view!{
+        <button on:click=move |_| choice(random_small_int(n) as usize)>
+            random example
+        </button>
+    }
+}
+
 #[component]
 fn App(examples: StoredValue<examples::Examples>,
        initial: usize
     ) -> impl IntoView {
     let (current_example, set_current_example) = create_signal(initial);
+    let n_examples = examples.with_value(|e| e.len());
 
     let current_source = 
         move || examples.with_value(|ex| ex[current_example()].highlighted_source);
@@ -70,6 +89,7 @@ fn App(examples: StoredValue<examples::Examples>,
 
     view!{
         <FuzzyFinder snippets=descriptions choice=set_current_example/>
+        <RandomSelector choice=set_current_example n=n_examples/>
         <Description examples=examples current=current_example/>
         // the code
         <div style="height: 50%; overflow-y: scroll"
