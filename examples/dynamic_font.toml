@@ -1,0 +1,6 @@
+description="""
+This component let you chose a font, and render some text with the according font dynamically.
+"""
+
+features=["nightly"]
+links=["select.rs"]

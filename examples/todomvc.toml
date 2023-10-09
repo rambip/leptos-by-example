@@ -1,1 +1,3 @@
-description="the classic `todomvc` example, with local storage included"
+description="""
+the classic `todomvc` example, with local storage included
+"""

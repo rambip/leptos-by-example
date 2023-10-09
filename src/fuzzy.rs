@@ -62,20 +62,7 @@ pub fn FuzzyFinder (
         result
     });
 
-    // view of the matchs
-    let match_list = move || {
-        let snippets=snippets.clone();
-        ordered_matches()
-        .into_iter()
-        .enumerate()
-        .map(|(i, snippet_id)| view!{<ExampleMatch 
-            name=snippets[snippet_id].0.clone() 
-            description=snippets[snippet_id].1 
-            highlighted={highlighted()==i}
-            matches=scores()[snippet_id].clone().unwrap().1
-            />})
-        .collect_view()
-    };
+    let confirm = move || choice(ordered_matches()[highlighted()]);
 
     // exits the search bar
     let exit = move || {
@@ -88,6 +75,24 @@ pub fn FuzzyFinder (
             .unwrap()
             .blur();
     };
+
+    // view of the matchs
+    let match_list = move || {
+        let snippets=snippets.clone();
+        ordered_matches()
+        .into_iter()
+        .enumerate()
+        .map(|(i, snippet_id)| view!{<ExampleMatch 
+            name=snippets[snippet_id].0.clone() 
+            description=snippets[snippet_id].1 
+            highlighted={highlighted()==i}
+            matches=scores()[snippet_id].clone().unwrap().1
+            on:mouseover=move |_| highlight(i)
+            on:mousedown=move |_| {confirm(); exit()}
+            />})
+        .collect_view()
+    };
+
 
     view!{
         <div>
@@ -102,7 +107,7 @@ pub fn FuzzyFinder (
                 on:keydown = move |ev| {
                     if focused(){
                         if ev.key() == "Enter" {
-                            choice(ordered_matches()[highlighted()]);
+                            confirm();
                             exit()
                         }
                         if ev.key() == "Escape" {
@@ -122,7 +127,9 @@ pub fn FuzzyFinder (
                 prop:value=request
             />
             // results are hidden if the search bar is not focused
+            <div style="position:relative; opacity:1">
             {move || focused().then(|| match_list())}
+            </div>
         </div>
     }
 }

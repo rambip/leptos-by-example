@@ -1,4 +1,6 @@
-description="""Illustrates how you can pass a function that returns html as a prop,
-with the help of callbacks"""
+description="""
+Illustrates how you can pass a function that returns html as a prop,
+with the help of callbacks
+"""
 
 features=["nightly"]

@@ -1,0 +1,6 @@
+description="""
+strategies to show repetitions and lists of items.
+This example illustrates static and dynamic iteration.
+"""
+
+features=["nightly"]
