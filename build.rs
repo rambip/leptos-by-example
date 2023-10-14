@@ -92,13 +92,15 @@ fn read_examples(path: &Path,
 
             examples.extend(
                 quote!{
-                    Example {
-                        name: #file_name,
+                    (
+                        #file_name, 
+                        Example {
                         highlighted_source: #highlighted_source,
                         code: pack_example(#example_name::showcase),
                         css: #css,
                         description: #description,
-                    },
+                    }
+                    ),
                 }
             );
 
@@ -128,12 +130,15 @@ fn main() -> Result<(), io::Error> {
 
         use super::{Example, pack_example};
 
-        pub type Examples = [Example; #n_examples];
+        pub const N_EXAMPLES: usize = #n_examples;
+        pub type Examples = std::collections::HashMap<&'static str, Example>;
 
         pub fn examples() -> Examples {
             [
                 #examples
             ]
+            .into_iter()
+            .collect()
         }
     };
 

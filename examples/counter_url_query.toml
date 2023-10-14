@@ -1,0 +1,3 @@
+description="a simple counter component, but whose state is stored in the page url"
+
+dependencies=["leptos_router"]

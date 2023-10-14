@@ -1,7 +1,8 @@
 use leptos::*;
+use leptos_router::*;
 
 mod examples;
-use examples::{examples, Examples};
+use examples::{examples, Examples, N_EXAMPLES};
 
 mod fuzzy;
 use fuzzy::FuzzyFinder;
@@ -9,9 +10,9 @@ use fuzzy::FuzzyFinder;
 use getrandom::getrandom;
 
 
+#[derive(Clone)]
 struct Example {
     pub highlighted_source: &'static str,
-    name: &'static str,
     pub code: Signal<View>,
     pub css: Option<&'static str>,
     pub description: &'static str
@@ -26,14 +27,10 @@ where F: Fn() -> I + 'static,
 }
 
 #[component]
-fn Description(examples: StoredValue<Examples>, current: ReadSignal<usize>) -> impl IntoView {
-    let description = move || {
-        examples.with_value(|ex| ex[current()].description)
-    };
-
+fn Description(example: Example) -> impl IntoView {
     view!{
         <pre>
-            {description}
+            {example.description}
         </pre>
     }
 }
@@ -41,17 +38,11 @@ fn Description(examples: StoredValue<Examples>, current: ReadSignal<usize>) -> i
 
 /// the in-browser demo of the example
 #[component]
-fn Showcase(examples: StoredValue<Examples>, current: ReadSignal<usize>) -> impl IntoView {
-    let current_showcase = 
-        move || examples.with_value(|ex| ex[current()].code.get());
-
-    let current_css = 
-        move || examples.with_value(|ex| ex[current()].css);
-
+fn Showcase(example: Example) -> impl IntoView {
     view!{
         <div style="border: 2px solid black; height: 50%; overflow-y: scroll"
-            css=current_css>
-            {current_showcase}
+            css=example.css>
+            {example.code}
         </div>
     }
 }
@@ -64,7 +55,7 @@ fn random_small_int(n: usize) -> usize {
 }
 
 #[component]
-fn RandomSelector(choice: WriteSignal<usize>, n: usize) -> impl IntoView {
+fn RandomSelector<F: Fn(usize) + 'static>(choice: F, n: usize) -> impl IntoView {
     view!{
         <button on:click=move |_| choice(random_small_int(n) as usize)>
             random example
@@ -72,42 +63,69 @@ fn RandomSelector(choice: WriteSignal<usize>, n: usize) -> impl IntoView {
     }
 }
 
+fn example_view(example: Example) -> impl IntoView {
+    view!{
+        <Description example=example.clone()/>
+        // the code
+        <div style="height: 50%; overflow-y: scroll"
+            inner_html=example.highlighted_source
+        >
+        </div>
+        <Showcase example=example.clone()/>
+    }
+}
+
 #[component]
 fn App(examples: StoredValue<examples::Examples>,
-       initial: usize
+       default: &'static str
     ) -> impl IntoView {
-    let (current_example, set_current_example) = create_signal(initial);
-    let n_examples = examples.with_value(|e| e.len());
+    let (current_name, set_current_name) = create_query_signal("example");
+    let current_name = Signal::derive(
+        move || current_name().unwrap_or(default.to_string())
+    );
+    let set_current_name = move |x| set_current_name(Some(x));
 
-    let current_source = 
-        move || examples.with_value(|ex| ex[current_example()].highlighted_source);
+    let current = Signal::derive(move || -> Option<Example> {
+        with!(|examples, current_name|{
+            examples.get(current_name as &str).cloned()
+        })});
 
-    let descriptions: Vec<_> = examples.with_value(
-        |e| e.into_iter().map(|x| (x.name.to_owned(), store_value(x.description.to_owned())))
+
+    let names: Vec<_> = examples.with_value(|e| e.keys().cloned().collect());
+
+    let snippets: Vec<_> = examples.with_value(
+        |e| e.into_iter().map(|(name, x)| (name.to_string(), store_value(x.description.to_owned())))
         .collect()
     );
 
+    let set_current_example_by_index = move |i: usize|
+        set_current_name(names[i].to_string());
+
     view!{
-        <FuzzyFinder snippets=descriptions choice=set_current_example/>
-        <RandomSelector choice=set_current_example n=n_examples/>
-        <Description examples=examples current=current_example/>
-        // the code
-        <div style="height: 50%; overflow-y: scroll"
-            inner_html=current_source
-        >
-        </div>
-        <Showcase examples=examples current=current_example/>
+        <Router>
+            <FuzzyFinder snippets=snippets choice=set_current_example_by_index.clone()/>
+            <RandomSelector choice=set_current_example_by_index n=N_EXAMPLES/>
+            {move || match current() {
+                    Some(x) => example_view(x.clone()).into_view(),
+                    None => view!{<div>example {current_name} does not exists</div>}
+                    .into_view()
+                }
+            }
+        </Router>
     }
 }
 
 fn main(){
-    let examples = examples();
-
-    let hello_world_id = examples.iter().position(|x| x.name=="hello_world").unwrap();
-
-    let examples = store_value(examples);
+    let examples = store_value(examples());
     console_error_panic_hook::set_once();
 
+    let entrypoint = move ||
+        view!{
+            <Router>
+                <App examples=examples default="hello_world"/>
+            </Router>
+        };
 
-    leptos::mount_to_body(move || view!{<App examples=examples initial=hello_world_id/>});
+
+    leptos::mount_to_body(entrypoint)
 }

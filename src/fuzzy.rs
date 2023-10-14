@@ -21,11 +21,11 @@ fn ExampleMatch(
 }
 
 #[component]
-pub fn FuzzyFinder (
+pub fn FuzzyFinder<F: Fn(usize) + 'static> (
     /// the (name, snippet) pairs to research into
     snippets: Vec<(String, StoredValue<String>)>,
     /// the setter for the index of the item chosen by the user
-    choice: WriteSignal<usize>,
+    choice: F,
     ) -> impl IntoView 
 {
     // word written by the user
@@ -62,7 +62,9 @@ pub fn FuzzyFinder (
         result
     });
 
-    let confirm = move || choice(ordered_matches()[highlighted()]);
+    let confirm = Signal::derive(
+        move || choice(ordered_matches()[highlighted()])
+    );
 
     // exits the search bar
     let exit = move || {
@@ -77,7 +79,7 @@ pub fn FuzzyFinder (
     };
 
     // view of the matchs
-    let match_list = move || {
+    let match_list = Signal::derive(move || {
         let snippets=snippets.clone();
         ordered_matches()
         .into_iter()
@@ -91,7 +93,7 @@ pub fn FuzzyFinder (
             on:mousedown=move |_| {confirm(); exit()}
             />})
         .collect_view()
-    };
+    });
 
 
     view!{
@@ -128,7 +130,7 @@ pub fn FuzzyFinder (
             />
             // results are hidden if the search bar is not focused
             <div style="position:relative; opacity:1">
-            {move || focused().then(|| match_list())}
+            {move || focused().then(match_list)}
             </div>
         </div>
     }
