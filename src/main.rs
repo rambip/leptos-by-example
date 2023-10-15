@@ -27,7 +27,7 @@ where F: Fn() -> I + 'static,
 }
 
 #[component]
-fn Description(example: Example) -> impl IntoView {
+fn Description<'a>(example: &'a Example) -> impl IntoView {
     view!{
         <pre>
             {example.description}
@@ -38,7 +38,7 @@ fn Description(example: Example) -> impl IntoView {
 
 /// the in-browser demo of the example
 #[component]
-fn Showcase(example: Example) -> impl IntoView {
+fn Showcase<'a>(example: &'a Example) -> impl IntoView {
     view!{
         <div style="border: 2px solid black; height: 50%; overflow-y: scroll"
             css=example.css>
@@ -63,20 +63,31 @@ fn RandomSelector<F: Fn(usize) + 'static>(choice: F, n: usize) -> impl IntoView 
     }
 }
 
-fn example_view(example: Example) -> impl IntoView {
-    view!{
-        <Description example=example.clone()/>
-        // the code
-        <div style="height: 50%; overflow-y: scroll"
-            inner_html=example.highlighted_source
-        >
-        </div>
-        <Showcase example=example.clone()/>
+#[component]
+fn ExampleView<F,I> (
+    examples: examples::Examples,
+    name: Signal<String>,
+    fallback: F
+    ) -> impl IntoView 
+    where F: Fn(String) -> I + 'static,
+          I: IntoView
+{
+    move || match examples.get(&name() as &str) {
+        Some(e) => view!{
+            <Description example=e/>
+            // the code
+            <div style="height: 50%; overflow-y: scroll"
+                inner_html=e.highlighted_source
+            >
+            </div>
+            <Showcase example=e/>
+        }.into_view(),
+        None => fallback(name()).into_view()
     }
 }
 
 #[component]
-fn App(examples: StoredValue<examples::Examples>,
+fn App(examples: examples::Examples,
        default: &'static str
     ) -> impl IntoView {
     let (current_name, set_current_name) = create_query_signal("example");
@@ -85,18 +96,11 @@ fn App(examples: StoredValue<examples::Examples>,
     );
     let set_current_name = move |x| set_current_name(Some(x));
 
-    let current = Signal::derive(move || -> Option<Example> {
-        with!(|examples, current_name|{
-            examples.get(current_name as &str).cloned()
-        })});
+    let names: Vec<_> = examples.keys().cloned().collect();
 
-
-    let names: Vec<_> = examples.with_value(|e| e.keys().cloned().collect());
-
-    let snippets: Vec<_> = examples.with_value(
-        |e| e.into_iter().map(|(name, x)| (name.to_string(), store_value(x.description.to_owned())))
-        .collect()
-    );
+    let snippets: Vec<_> = examples.clone()
+        .into_iter().map(|(name, x)| (name.to_string(), store_value(x.description.to_owned())))
+        .collect();
 
     let set_current_example_by_index = move |i: usize|
         set_current_name(names[i].to_string());
@@ -105,24 +109,22 @@ fn App(examples: StoredValue<examples::Examples>,
         <Router>
             <FuzzyFinder snippets=snippets choice=set_current_example_by_index.clone()/>
             <RandomSelector choice=set_current_example_by_index n=N_EXAMPLES/>
-            {move || match current() {
-                    Some(x) => example_view(x.clone()).into_view(),
-                    None => view!{<div>example {current_name} does not exists</div>}
-                    .into_view()
-                }
-            }
+            <ExampleView 
+                examples=examples 
+                name=current_name 
+                fallback=move |x| view!{<div>example {x} does not exist</div>}
+        />
         </Router>
     }
 }
 
 fn main(){
-    let examples = store_value(examples());
     console_error_panic_hook::set_once();
 
     let entrypoint = move ||
         view!{
             <Router>
-                <App examples=examples default="hello_world"/>
+                <App examples=examples() default="hello_world"/>
             </Router>
         };
 
