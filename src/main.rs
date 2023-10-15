@@ -72,6 +72,7 @@ fn ExampleView<F,I> (
     where F: Fn(String) -> I + 'static,
           I: IntoView
 {
+
     move || match examples.get(&name() as &str) {
         Some(e) => view!{
             <Documentation example=e/>
@@ -96,11 +97,19 @@ fn ExampleView<F,I> (
 fn App(examples: examples::Examples,
        default: &'static str
     ) -> impl IntoView {
-    let (current_name, set_current_name) = create_query_signal("example");
-    let current_name = Signal::derive(
-        move || current_name().unwrap_or(default.to_string())
-    );
-    let set_current_name = move |x| set_current_name(Some(x));
+
+    let location = use_location();
+    let current_name = move || {
+        let path = &location.pathname.get()[1..]; // remove the `/` part
+        if path=="" {default.to_string()} else {path.to_string()}
+    };
+
+    create_effect(move |_| logging::log!("current name is {}", current_name()));
+
+    let navigate = leptos_router::use_navigate();
+
+    let set_current_name = Callback::new(move |dest| navigate(dest, Default::default()));
+
 
     let names: Vec<_> = examples.keys().cloned().collect();
 
@@ -108,22 +117,19 @@ fn App(examples: examples::Examples,
         .into_iter().map(|(name, x)| (name.to_string(), store_value(x.description.to_owned())))
         .collect();
 
-    let set_current_example_by_index = move |i: usize|
-        set_current_name(names[i].to_string());
+    let set_current_example_by_index = move |i: usize| set_current_name(names[i]);
 
     view!{
-        <Router>
-            <div style:display="flex">
-                <b style="padding-right: 30px; font-size: 25px">{current_name}</b>
-                <RandomSelector choice=set_current_example_by_index.clone() n=N_EXAMPLES/>
-                <FuzzyFinder snippets=snippets choice=set_current_example_by_index/>
-            </div>
-            <ExampleView 
-                examples=examples 
-                name=current_name 
-                fallback=move |x| view!{<div>example {x} does not exist</div>}
+        <div style:display="flex">
+            <b style="padding-right: 30px; font-size: 25px">{current_name}</b>
+            <RandomSelector choice=set_current_example_by_index.clone() n=N_EXAMPLES/>
+            <FuzzyFinder snippets=snippets choice=set_current_example_by_index/>
+        </div>
+        <ExampleView 
+            examples=examples 
+            name=current_name.into_signal()
+            fallback=move |x| view!{<div>example {x} does not exist</div>}
         />
-        </Router>
     }
 }
 
