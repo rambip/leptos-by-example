@@ -23,11 +23,7 @@ pub fn SimpleQueryCounter() -> impl IntoView {
 pub fn showcase() -> impl IntoView {
     view!{
         <Router>
-            <main>
-                <Routes>
-                    <Route path="/" view=SimpleQueryCounter/>
-                </Routes>
-            </main>
+            <SimpleQueryCounter/>
         </Router>
     }
 }
