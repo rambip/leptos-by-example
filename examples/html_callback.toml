@@ -4,7 +4,7 @@ Illustrates how you can pass a function that returns html as a prop,
 with the help of callbacks
 """
 related="""
-https://docs.rs/leptos/latest/leptos/callback/index.html
+<https://docs.rs/leptos/latest/leptos/callback/index.html>
 """
 
 features=["nightly"]

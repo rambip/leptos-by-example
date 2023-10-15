@@ -7,7 +7,7 @@ This code shows two things:
 - how you can use `select`
 """
 related="""
-See <./select> for the `select` html component
+See [select](./select) for the `select` html component
 
 For dynamic styles, see [here](https://leptos-rs.github.io/leptos/view/02_dynamic_attributes.html?highlight=dynamic%20st#dynamic-styles)
 """

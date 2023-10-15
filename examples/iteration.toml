@@ -4,7 +4,7 @@ strategies to show repetitions and lists of items.
 This example illustrates static and dynamic iteration.
 """
 related="""
-https://leptos-rs.github.io/leptos/view/04_iteration.html
+<https://leptos-rs.github.io/leptos/view/04_iteration.html>
 """
 
 features=["nightly"]

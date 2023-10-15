@@ -3,6 +3,6 @@ motivation="""
 illustrates how to use `MaybeSignal` to pass either a dynamic, either a static prop
 """
 related="""
-https://docs.rs/leptos/latest/leptos/enum.MaybeSignal.html
+<https://docs.rs/leptos/latest/leptos/enum.MaybeSignal.html>
 """
 features=["nightly"]

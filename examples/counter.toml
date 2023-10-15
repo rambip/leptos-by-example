@@ -8,7 +8,7 @@ This example shows how to write the most basic component.
 - each time the state change, it will be rerendered
 """
 related="""
-See <counter_without_macro> and <./counter_url_query> for other versions of the same component
+See [counter_without_macro](./counter_without_macro) and [counter_url_query](./counter_url_query) for other versions of the same component
 """
 features = ["nightly"]
 links = ["counter_without_macro"]
