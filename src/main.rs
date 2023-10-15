@@ -36,19 +36,8 @@ fn Description<'a>(example: &'a Example) -> impl IntoView {
 }
 
 
-/// the in-browser demo of the example
-#[component]
-fn Showcase<'a>(example: &'a Example) -> impl IntoView {
-    view!{
-        <div style="border: 2px solid black; height: 50%; overflow-y: scroll"
-            css=example.css>
-            {example.code}
-        </div>
-    }
-}
-
 fn random_small_int(n: usize) -> usize {
-    let mut buf: &mut [u8] = &mut [0,0];
+    let buf: &mut [u8] = &mut [0,0];
     getrandom(buf).unwrap();
     let (a,b) = (buf[0] as usize, buf[1] as usize);
     (a*256 + b) % n
@@ -76,11 +65,17 @@ fn ExampleView<F,I> (
         Some(e) => view!{
             <Description example=e/>
             // the code
-            <div style="height: 50%; overflow-y: scroll"
-                inner_html=e.highlighted_source
-            >
+            <div style="display:flex; height: 100%">
+                <div style="width: 50%; height: 100%; overflow-y: scroll"
+                    inner_html=e.highlighted_source
+                >
+                </div>
+                // the in-browser demo
+                <div style="border: 2px solid black; margin: 10px; width: 50%; height: 100%; overflow-y: scroll"
+                    css=e.css>
+                    {e.code}
+                </div>
             </div>
-            <Showcase example=e/>
         }.into_view(),
         None => fallback(name()).into_view()
     }
@@ -107,8 +102,11 @@ fn App(examples: examples::Examples,
 
     view!{
         <Router>
-            <FuzzyFinder snippets=snippets choice=set_current_example_by_index.clone()/>
-            <RandomSelector choice=set_current_example_by_index n=N_EXAMPLES/>
+            <div style:display="flex">
+                <FuzzyFinder snippets=snippets choice=set_current_example_by_index.clone()/>
+                <RandomSelector choice=set_current_example_by_index n=N_EXAMPLES/>
+            </div>
+            <h2>{current_name}</h2>
             <ExampleView 
                 examples=examples 
                 name=current_name 
