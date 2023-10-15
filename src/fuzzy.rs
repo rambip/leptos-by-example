@@ -14,7 +14,7 @@ fn ExampleMatch(
     ) -> impl IntoView {
     // TODO: highlight `matches` in description
     view!{
-            <div style=if highlighted {"background-color: gray"} else {""}>
+            <div style:background-color=highlighted.then(|| "gray")> 
                 <b>{name}</b><p>{description}</p>
             </div>
         }
@@ -97,8 +97,9 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
 
 
     view!{
-        <div>
+        <div style="position: relative">
             <input type="text"
+                style:width="100%"
                 placeholder="search example here"
                 on:input=move |ev| {
                 set_request(event_target_value(&ev));
@@ -129,7 +130,7 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
                 prop:value=request
             />
             // results are hidden if the search bar is not focused
-            <div style="position:relative; opacity:1">
+            <div style="position:absolute; background-color: white">
             {move || focused().then(match_list)}
             </div>
         </div>
