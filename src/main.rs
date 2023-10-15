@@ -2,7 +2,7 @@ use leptos::*;
 use leptos_router::*;
 
 mod examples;
-use examples::{examples, Examples, N_EXAMPLES};
+use examples::{examples, N_EXAMPLES};
 
 mod fuzzy;
 use fuzzy::FuzzyFinder;
@@ -15,7 +15,9 @@ struct Example {
     pub highlighted_source: &'static str,
     pub code: Signal<View>,
     pub css: Option<&'static str>,
-    pub description: &'static str
+    pub description: &'static str,
+    pub motivation: &'static str,
+    pub related: Option<&'static str>,
 }
 
 // wraps a function inside a signal.

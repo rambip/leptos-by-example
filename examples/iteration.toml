@@ -1,6 +1,10 @@
-description="""
+description="iterate to render list and collections of items"
+motivation="""
 strategies to show repetitions and lists of items.
 This example illustrates static and dynamic iteration.
+"""
+related="""
+https://leptos-rs.github.io/leptos/view/04_iteration.html
 """
 
 features=["nightly"]

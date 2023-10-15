@@ -1,3 +1,15 @@
-description = """
-the most simple `hello world` code
+description = "the most simple `hello world` code"
+motivation="""
+In this example, you can see the bare minimum that is needed to work with leptos.
+you import all the leptos functionnality, then define a function that returns any html (a `View`)
+
+Note that to actually render it in your browser, you have to mount it first
+```rust
+fn main(){
+    mount_to_body(showcase);
+}
+```
+"""
+related="""
+https://leptos-rs.github.io/leptos/02_getting_started.html
 """

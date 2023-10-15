@@ -1,3 +1,12 @@
-description="a simple counter component, but whose state is stored in the page url"
+description="Constructs a signal synchronized with a specific URL query parameter."
+motivation="""
+The function creates a bidirectional sync mechanism between the state encapsulated in a signal and a URL query parameter. This means that any change to the state will update the URL, and vice versa, making the function especially useful for maintaining state consistency across page reloads.
+"""
+related="""
+The simpler example is <./counter>
+
+look at the [leptos documentation on params and queries](https://leptos-rs.github.io/leptos/router/18_params_and_queries.html?highlight=use_que#params-and-queries)
+For the `create_query_signal` documentation, see [here](https://docs.rs/leptos_router/latest/leptos_router/fn.create_query_signal.html)
+"""
 
 dependencies=["leptos_router"]

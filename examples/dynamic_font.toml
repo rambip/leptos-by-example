@@ -1,6 +1,16 @@
 description="""
 This component let you chose a font, and render some text with the according font dynamically.
 """
+motivation="""
+This code shows two things:
+- how you can use dynamic styles.
+- how you can use `select`
+"""
+related="""
+See <./select> for the `select` html component
+
+For dynamic styles, see [here](https://leptos-rs.github.io/leptos/view/02_dynamic_attributes.html?highlight=dynamic%20st#dynamic-styles)
+"""
 
 features=["nightly"]
 links=["select.rs"]

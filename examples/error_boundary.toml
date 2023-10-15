@@ -1,3 +1,7 @@
-description="""
-illustrates how to show a custom error message to the user
+description="illustrates how to show a custom error message to the user"
+motivation="""
+To catch an error emmited by one of the children, you can use `ErrorBoundary`
+"""
+related="""
+https://leptos-rs.github.io/leptos/view/07_errors.html?highlight=error%20hnd#error-handling
 """

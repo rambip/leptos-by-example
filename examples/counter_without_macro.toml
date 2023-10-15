@@ -1,6 +1,10 @@
-description="""
-This example is the same like the counter but it's written without using macros and can be build with stable Rust.
+description="simple counter component but without macros"
+motivation="""
+You can use the builder pattern if you don't feel like using a macro
+This is the way the `view!` macro works, if you're curious
 """
-links=["counter"]
+related="""
+for the same example using macros, see <./counter>
+"""
 
 features=[]

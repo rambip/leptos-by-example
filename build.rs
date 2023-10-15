@@ -28,12 +28,22 @@ fn highlight(code: &str) -> String {
 #[derive(Deserialize)]
 struct Info {
     description: String,
+    motivation: String,
+    related: Option<String>,
 }
 
-fn extract_toml_info(file_name: &str) -> Option<Info> {
-    let raw_toml_info = fs::read(format!("examples/{file_name}.toml")).ok()?;
+fn extract_toml_info(file_name: &str) -> std::result::Result<Info, toml::de::Error> {
+    let raw_toml_info = fs::read(format!("examples/{file_name}.toml"))
+        .expect("please create examples/{file_name}.toml to provide some documentation");
     let toml_info = String::from_utf8_lossy(&raw_toml_info);
-    toml::from_str(&toml_info).ok()?
+    toml::from_str(&toml_info)
+}
+
+fn quote_option(text: Option<String>) -> TokenStream {
+    match text {
+        Some(x) => quote!{Some(#x)},
+        None => quote!{None}
+    }
 }
 
 /// reads the `example` directory.
@@ -65,11 +75,19 @@ fn read_examples(path: &Path,
                 Err(_) => quote!{None}
             };
 
-            let description = extract_toml_info(&file_name)
-                .expect(
-                    &format!("please provide a description of the file {file_name}.rs 
-                             in {file_name}.toml"))
-                .description;
+            let Info{description,
+                    motivation,
+                    related} = match extract_toml_info(&file_name) {
+                        Ok(x) => x,
+                        Err(e) => {
+                            eprintln!("please provide all the required fields in {file_name}.toml");
+                            eprintln!("The missing field is {:?}", e.message());
+                            panic!()
+                        }
+            };
+
+            // TODO: refactor
+            let related=quote_option(related);
 
             format!("examples/{file_name}.css");
 
@@ -99,6 +117,8 @@ fn read_examples(path: &Path,
                         code: pack_example(#example_name::showcase),
                         css: #css,
                         description: #description,
+                        motivation: #motivation,
+                        related: #related,
                     }
                     ),
                 }

@@ -1,3 +1,7 @@
-description="""
-This example creates a simple timer based on setInterval
+description="simple timer based on setInterval"
+motivation="""
+This example illustrates how you can add timing to your app, the same way as in javascript
+"""
+related="""
+https://developer.mozilla.org/en-US/docs/Web/API/setInterval
 """
