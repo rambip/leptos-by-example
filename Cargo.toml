@@ -24,6 +24,7 @@ leptos_router = {version="0.5.1", features=["csr"]}
 [build-dependencies]
 prettyplease = "0.2.15"
 proc-macro2 = "1.0.67"
+pulldown-cmark = "0.9.3"
 quote = "1.0.33"
 serde = "1.0.188"
 syn = {version="2.0.37", features=["parsing"]}

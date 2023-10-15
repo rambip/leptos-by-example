@@ -29,11 +29,20 @@ where F: Fn() -> I + 'static,
 }
 
 #[component]
-fn Description<'a>(example: &'a Example) -> impl IntoView {
+fn Documentation<'a>(example: &'a Example) -> impl IntoView {
     view!{
-        <pre>
-            {example.description}
-        </pre>
+        <div style="max-height:30%; overflow:scroll; border: 1px solid black">
+            <h3>What</h3>
+            <pre>
+                {example.description}
+            </pre>
+            <h3>Why</h3>
+            <div inner_html=example.motivation>
+            </div>
+            <h3>See also</h3>
+            <div inner_html=example.related>
+            </div>
+        </div>
     }
 }
 
@@ -65,9 +74,9 @@ fn ExampleView<F,I> (
 {
     move || match examples.get(&name() as &str) {
         Some(e) => view!{
-            <Description example=e/>
+            <Documentation example=e/>
             // the code
-            <div style="display:flex; height: 100%">
+            <div style="display:flex; height:50%">
                 <div style="width: 50%; height: 100%; overflow-y: scroll"
                     inner_html=e.highlighted_source
                 >
@@ -105,10 +114,10 @@ fn App(examples: examples::Examples,
     view!{
         <Router>
             <div style:display="flex">
-                <FuzzyFinder snippets=snippets choice=set_current_example_by_index.clone()/>
-                <RandomSelector choice=set_current_example_by_index n=N_EXAMPLES/>
+                <b style="padding-right: 30px; font-size: 25px">{current_name}</b>
+                <RandomSelector choice=set_current_example_by_index.clone() n=N_EXAMPLES/>
+                <FuzzyFinder snippets=snippets choice=set_current_example_by_index/>
             </div>
-            <h2>{current_name}</h2>
             <ExampleView 
                 examples=examples 
                 name=current_name 

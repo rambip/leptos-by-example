@@ -25,7 +25,7 @@ fn highlight(code: &str) -> String {
 }
 
 /// the `example.toml` representation
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 struct Info {
     description: String,
     motivation: String,
@@ -44,6 +44,24 @@ fn quote_option(text: Option<String>) -> TokenStream {
         Some(x) => quote!{Some(#x)},
         None => quote!{None}
     }
+}
+
+fn html_from_markdown(file_name: &str, input: String) -> String {
+    use pulldown_cmark::{Tag, Event};
+    let parser = pulldown_cmark::Parser::new(&input);
+
+    let checked_parser = parser
+        .map(|x| match x {
+            Event::Start(Tag::Heading(_,_,_)) => panic!(
+                "{file_name}.toml: headings are not allowed in this field"
+            ),
+            _ => x,
+    });
+
+    // Write to a new String buffer.
+    let mut html_output = String::new();
+    pulldown_cmark::html::push_html(&mut html_output, checked_parser);
+    html_output
 }
 
 /// reads the `example` directory.
@@ -75,19 +93,21 @@ fn read_examples(path: &Path,
                 Err(_) => quote!{None}
             };
 
-            let Info{description,
-                    motivation,
-                    related} = match extract_toml_info(&file_name) {
-                        Ok(x) => x,
-                        Err(e) => {
-                            eprintln!("please provide all the required fields in {file_name}.toml");
-                            eprintln!("The missing field is {:?}", e.message());
-                            panic!()
-                        }
+            let info = match extract_toml_info(&file_name) {
+                Ok(x) => x,
+                Err(e) => {
+                    eprintln!("please provide all the required fields in {file_name}.toml");
+                    eprintln!("The missing field is {:?}", e.message());
+                    panic!()
+                }
             };
 
-            // TODO: refactor
-            let related=quote_option(related);
+            let description = info.description;
+
+            let motivation = html_from_markdown(&file_name, info.motivation);
+            let related=quote_option(
+                info.related.map(|x| html_from_markdown(&file_name, x))
+            );
 
             format!("examples/{file_name}.css");
 
