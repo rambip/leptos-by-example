@@ -50,7 +50,7 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
     });
 
     let unwrapped_score = move |i: &usize| match scores()[*i] {
-        Some((score, _)) => score,
+        Some((score, _)) => -score,
         None => panic!(),
     };
 
