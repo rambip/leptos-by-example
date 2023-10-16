@@ -6,7 +6,7 @@ Mainly illustrate the `create_resource` function. From the leptos docs:
 A Resource is a reactive data structure that reflects the current state of an asynchronous task, allowing you to integrate asynchronous Futures into the synchronous reactive system. Rather than waiting for its data to load with .await, you transform the Future into a signal that returns Some(T) if it has resolved, and None if it’s still pending.
 """
 related="""
-[error_boundary](./error_boundary)
+[error_boundary](#error_boundary)
 <https://docs.rs/leptos/latest/leptos/fn.create_resource.html>
 <https://leptos-rs.github.io/leptos/async/10_resources.html>
 """

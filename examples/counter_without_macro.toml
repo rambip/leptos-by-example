@@ -4,7 +4,7 @@ You can use the builder pattern if you don't feel like using a macro
 This is the way the `view!` macro works, if you're curious
 """
 related="""
-for the same example using macros, see [counter](./counter)
+for the same example using macros, see [counter](#counter)
 """
 
 features=[]
