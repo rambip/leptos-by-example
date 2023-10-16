@@ -99,16 +99,20 @@ fn App(examples: examples::Examples,
     ) -> impl IntoView {
 
     let location = use_location();
-    let current_name = move || {
-        let path = &location.pathname.get()[1..]; // remove the `/` part
-        if path=="" {default.to_string()} else {path.to_string()}
+    let current_name = move ||
+        match &location.hash.get().chars().collect::<Vec<_>>()[..] {
+            [] => default.to_string(),
+            ['#'] => default.to_string(),
+            ['#', rest @ ..] => rest.into_iter().collect(),
+            _ => unreachable!()
     };
 
     create_effect(move |_| logging::log!("current name is {}", current_name()));
 
     let navigate = leptos_router::use_navigate();
-
-    let set_current_name = Callback::new(move |dest| navigate(dest, Default::default()));
+    let set_current_name = Callback::new(
+        move |dest| navigate(&format!("#{dest}"), Default::default())
+    );
 
 
     let names: Vec<_> = examples.keys().cloned().collect();
