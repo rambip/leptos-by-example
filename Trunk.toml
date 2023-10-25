@@ -1,2 +1,5 @@
 [watch]
 ignore = ["src/examples.rs"]
+
+[build]
+public_dir="leptos-by-example"

@@ -11,6 +11,7 @@ use getrandom::getrandom;
 
 use stylist::Style;
 
+static PUBLIC_DIR: &str = "leptos-by-example";
 
 #[derive(Clone)]
 struct Example {
@@ -112,7 +113,7 @@ fn App(examples: examples::Examples,
 
     let navigate = leptos_router::use_navigate();
     let set_current_name = Callback::new(
-        move |dest| navigate(&format!("#{dest}"), Default::default())
+        move |dest| navigate(&format!("{PUBLIC_DIR}/#{dest}"), Default::default())
     );
 
 
