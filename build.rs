@@ -84,14 +84,8 @@ fn read_examples(path: &Path,
                 .unwrap()
                 .to_string();
 
-            let css = match fs::read(format!("examples/{file_name}.css")) {
-                Ok(_) => {
-                    let rel_path = format!("../examples/{file_name}.css");
-
-                    quote!{Some(include_str!(#rel_path))}
-                }
-                Err(_) => quote!{None}
-            };
+            let raw_css = fs::read(format!("examples/{file_name}.css")).unwrap_or(Vec::new());
+            let css = String::from_utf8_lossy(&raw_css);
 
             let info = match extract_toml_info(&file_name) {
                 Ok(x) => x,
@@ -114,13 +108,6 @@ fn read_examples(path: &Path,
             let example_name = Ident::new(&file_name, Span::call_site());
             let relative_path = format!("../examples/{file_name}.rs");
 
-            includes.extend(
-                quote!{
-                    mod #example_name {
-                        include!(#relative_path);
-                    }
-                }
-            );
 
             let highlighted_source = highlight(
                 std::str::from_utf8(
@@ -135,12 +122,20 @@ fn read_examples(path: &Path,
                         Example {
                         highlighted_source: #highlighted_source,
                         code: pack_example(#example_name::showcase),
-                        css: #css,
+                        css: stylist::style!(#css).unwrap(),
                         description: #description,
                         motivation: #motivation,
                         related: #related,
                     }
                     ),
+                }
+            );
+
+            includes.extend(
+                quote!{
+                    mod #example_name {
+                        include!(#relative_path);
+                    }
                 }
             );
 

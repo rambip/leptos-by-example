@@ -38,5 +38,10 @@ If your example needs a specific stylesheet, add a `foo.css` file with the conte
 It is not supported right now.
 
 
+Css use [stylist](https://docs.rs/stylist/latest/stylist/), so refer to their docs for the supported syntax.
+
+For the most part, you can use regular css
+
+
 # How it works
 Look at `build.rs` and the generated `src/examples.rs`, it should make sense

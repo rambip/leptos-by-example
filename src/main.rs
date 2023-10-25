@@ -9,12 +9,14 @@ use fuzzy::FuzzyFinder;
 
 use getrandom::getrandom;
 
+use stylist::Style;
+
 
 #[derive(Clone)]
 struct Example {
     pub highlighted_source: &'static str,
     pub code: Signal<View>,
-    pub css: Option<&'static str>,
+    pub css: Style,
     pub description: &'static str,
     pub motivation: &'static str,
     pub related: Option<&'static str>,
@@ -71,8 +73,8 @@ fn ExampleView<F,I> (
     ) -> impl IntoView 
     where F: Fn(String) -> I + 'static,
           I: IntoView
-{
 
+{
     move || match examples.get(&name() as &str) {
         Some(e) => view!{
             <Documentation example=e/>
@@ -83,9 +85,8 @@ fn ExampleView<F,I> (
                 >
                 </div>
                 // the in-browser demo
-                <div style="border: 2px solid black; margin: 10px; width: 50%; height: 100%; overflow-y: scroll"
-                    css=e.css>
-                    {e.code}
+                <div style="border: 2px solid black; margin: 10px; width: 50%; height: 100%; overflow-y: scroll">
+                    <div class=e.css.get_class_name().to_string()>{e.code}</div>
                 </div>
             </div>
         }.into_view(),

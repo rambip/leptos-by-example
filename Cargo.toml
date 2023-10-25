@@ -19,6 +19,8 @@ web-sys = { version = "0.3.60", features = ["Storage"] }
 getrandom = { version = "0.2", features = ["js"] }
 leptos-use = "0.7.1"
 leptos_router = {version="0.5.1", features=["csr"]}
+stylist = "0.13.0"
+styled = "0.1.41"
 
 
 [build-dependencies]
