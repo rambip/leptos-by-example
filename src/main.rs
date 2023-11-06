@@ -34,7 +34,7 @@ where F: Fn() -> I + 'static,
 #[component]
 fn Documentation<'a>(example: &'a Example) -> impl IntoView {
     view!{
-        <div style="max-height:30%; overflow:scroll; border: 1px solid black">
+        <div class="description">
             <h3>What</h3>
             <pre>
                 {example.description}
@@ -78,18 +78,13 @@ fn ExampleView<F,I> (
 {
     move || match examples.get(&name() as &str) {
         Some(e) => view!{
-            <Documentation example=e/>
             // the code
-            <div style="display:flex; height:50%">
-                <div style="width: 50%; height: 100%; overflow-y: scroll"
-                    inner_html=e.highlighted_source
-                >
-                </div>
-                // the in-browser demo
-                <div style="border: 2px solid black; margin: 10px; width: 50%; height: 100%; overflow-y: scroll">
-                    <div class=e.css.get_class_name().to_string()>{e.code}</div>
-                </div>
+            <div class="code-snippet" inner_html=e.highlighted_source></div>
+            // the in-browser demo
+            <div class="demo">
+                <div class=e.css.get_class_name().to_string()>{e.code}</div>
             </div>
+            <Documentation example=e/>
         }.into_view(),
         None => fallback(name()).into_view()
     }
@@ -119,13 +114,12 @@ fn App(examples: examples::Examples,
     );
 
 
-    let names: Vec<_> = examples.keys().cloned().collect();
+    let names: StoredValue<Vec<_>> = 
+        store_value(examples.keys().cloned().collect());
 
     let snippets: Vec<_> = examples.clone()
         .into_iter().map(|(name, x)| (name.to_string(), store_value(x.description.to_owned())))
         .collect();
-
-    let set_current_example_by_index = move |i: usize| set_current_name(names[i]);
 
     let key_handle = window_event_listener(ev::keypress, move |ev| {
         if ev.key() == "s" {
@@ -136,20 +130,22 @@ fn App(examples: examples::Examples,
 
 
     view!{
-        <div style:display="flex">
-            <b style="padding-right: 30px; font-size: 25px">{current_name}</b>
-            <RandomSelector choice=set_current_example_by_index.clone() n=N_EXAMPLES/>
+        <h1 class="title">Leptos by example</h1>
+        <div class="container">
+            <RandomSelector choice=move |i| set_current_name(names.with_value(|n| n[i])) n=N_EXAMPLES/>
             <FuzzyFinder 
+                placeholder="type `s` or click here to search example"
                 snippets=snippets 
                 focus=searchbar_focus
-                choice=set_current_example_by_index
+                choice=move |i| set_current_name(names.with_value(|n| n[i]))
+            />
+            <b class="example-title">{current_name}</b>
+            <ExampleView 
+                examples=examples 
+                name=current_name.into_signal()
+                fallback=move |x| view!{<div>example {x} does not exist</div>}
             />
         </div>
-        <ExampleView 
-            examples=examples 
-            name=current_name.into_signal()
-            fallback=move |x| view!{<div>example {x} does not exist</div>}
-        />
     }
 }
 

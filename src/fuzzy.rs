@@ -25,6 +25,7 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
     /// the setter for the index of the item chosen by the user
     choice: F,
     focus: RwSignal<bool>,
+    placeholder: &'static str,
     ) -> impl IntoView 
 {
     // word written by the user
@@ -103,11 +104,10 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
 
 
     view!{
-        <div style="position: relative">
+        <div class="searchbar" style="position: relative">
             <input type="text"
                 ref=input_ref
-                style:width="100%"
-                placeholder="search example here"
+                placeholder=placeholder
                 on:input=move |ev| {
                 set_request(event_target_value(&ev));
                 focus.set(true);
