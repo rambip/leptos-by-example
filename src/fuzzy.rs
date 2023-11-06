@@ -30,8 +30,6 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
     // word written by the user
     let (request, set_request) = create_signal(String::new());
 
-    let (match_visibility, set_match_visibility)=create_signal(false);
-
     let input_ref = create_node_ref::<Input>();
 
     create_effect(move |_| {
@@ -47,7 +45,6 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
                 .blur()
                 .unwrap();
             set_request(String::new());
-            set_match_visibility(false);
         }
 
     });
@@ -135,9 +132,7 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
                                 let i = highlighted();
                                 if i >= 1 { highlight(i-1)}
                             }
-                            _ => {
-                                set_match_visibility(true);
-                            }
+                            _ => ()
                         }
                     }
                 }
@@ -146,7 +141,7 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
             />
             // results are hidden if the search bar is not focused
             <div style="position:absolute; background-color: white">
-            {move || match_visibility().then(match_list)}
+            {move || (!request().is_empty()).then(match_list)}
             </div>
         </div>
     }
