@@ -109,6 +109,8 @@ fn App(examples: examples::Examples,
             _ => unreachable!()
     };
 
+    let searchbar_focus = create_rw_signal(false);
+
     create_effect(move |_| logging::log!("current name is {}", current_name()));
 
     let navigate = leptos_router::use_navigate();
@@ -125,11 +127,23 @@ fn App(examples: examples::Examples,
 
     let set_current_example_by_index = move |i: usize| set_current_name(names[i]);
 
+    let key_handle = window_event_listener(ev::keypress, move |ev| {
+        if ev.key() == "s" {
+            searchbar_focus.set(true);
+        }
+    });
+    on_cleanup(move || key_handle.remove());
+
+
     view!{
         <div style:display="flex">
             <b style="padding-right: 30px; font-size: 25px">{current_name}</b>
             <RandomSelector choice=set_current_example_by_index.clone() n=N_EXAMPLES/>
-            <FuzzyFinder snippets=snippets choice=set_current_example_by_index/>
+            <FuzzyFinder 
+                snippets=snippets 
+                focus=searchbar_focus
+                choice=set_current_example_by_index
+            />
         </div>
         <ExampleView 
             examples=examples 

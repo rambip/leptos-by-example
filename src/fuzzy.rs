@@ -1,9 +1,7 @@
 use fuzzy_matcher::skim::SkimMatcherV2;
 
 use leptos::*;
-
-use wasm_bindgen::JsCast;
-use web_sys::HtmlElement;
+use leptos::html::Input;
 
 #[component]
 fn ExampleMatch(
@@ -26,18 +24,41 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
     snippets: Vec<(String, StoredValue<String>)>,
     /// the setter for the index of the item chosen by the user
     choice: F,
+    focus: RwSignal<bool>,
     ) -> impl IntoView 
 {
     // word written by the user
     let (request, set_request) = create_signal(String::new());
-    // wether the search bar is focused
-    let (focused, set_focus) = create_signal(false);
+
+    let (match_visibility, set_match_visibility)=create_signal(false);
+
+    let input_ref = create_node_ref::<Input>();
+
+    create_effect(move |_| {
+        if focus.get() {
+            input_ref()
+                .unwrap()
+                .focus()
+                .unwrap()
+        }
+        else {
+            input_ref()
+                .unwrap()
+                .blur()
+                .unwrap();
+            set_request(String::new());
+            set_match_visibility(false);
+        }
+
+    });
+
     // the index of the currently selected word
     let (highlighted, highlight) = create_signal(0);
 
     let len = snippets.len();
 
     let matcher = SkimMatcherV2::default();
+
 
     // `scores()[i]` contains the result of the matcher 
     // when comparing `request` with `snippets[i].0`
@@ -66,18 +87,6 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
         move || choice(ordered_matches()[highlighted()])
     );
 
-    // exits the search bar
-    let exit = move || {
-        set_request(String::new());
-        set_focus(false);
-        let _ = document()
-            .active_element()
-            .unwrap()
-            .dyn_into::<HtmlElement>()
-            .unwrap()
-            .blur();
-    };
-
     // view of the matchs
     let match_list = Signal::derive(move || {
         let snippets=snippets.clone();
@@ -90,7 +99,7 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
             highlighted={highlighted()==i}
             matches=scores()[snippet_id].clone().unwrap().1
             on:mouseover=move |_| highlight(i)
-            on:mousedown=move |_| {confirm(); exit()}
+            on:mousedown=move |_| {confirm(); focus.set(false)}
             />})
         .collect_view()
     });
@@ -99,30 +108,36 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
     view!{
         <div style="position: relative">
             <input type="text"
+                ref=input_ref
                 style:width="100%"
                 placeholder="search example here"
                 on:input=move |ev| {
                 set_request(event_target_value(&ev));
-                set_focus(true);
+                focus.set(true);
             }
-                on:focusout=move |_| set_focus(false)
+                on:focusout=move |_| focus.set(false)
 
                 on:keydown = move |ev| {
-                    if focused(){
-                        if ev.key() == "Enter" {
-                            confirm();
-                            exit()
-                        }
-                        if ev.key() == "Escape" {
-                            exit()
-                        }
-                        if ev.key() == "ArrowDown" {
-                            let i = highlighted();
-                            if i<ordered_matches().len()-1 { highlight(i+1)}
-                        }
-                        if ev.key() == "ArrowUp" {
-                            let i = highlighted();
-                            if i >= 1 { highlight(i-1)}
+                    if ev.key() == "Escape" {
+                        focus.set(false)
+                    }
+                    if focus.get(){
+                        match ev.key().as_ref() {
+                            "Enter" => {
+                                confirm();
+                                focus.set(false)
+                            }
+                            "ArrowDown" => {
+                                let i = highlighted();
+                                if i<ordered_matches().len()-1 { highlight(i+1)}
+                            }
+                            "ArrowUp" => {
+                                let i = highlighted();
+                                if i >= 1 { highlight(i-1)}
+                            }
+                            _ => {
+                                set_match_visibility(true);
+                            }
                         }
                     }
                 }
@@ -131,7 +146,7 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
             />
             // results are hidden if the search bar is not focused
             <div style="position:absolute; background-color: white">
-            {move || focused().then(match_list)}
+            {move || match_visibility().then(match_list)}
             </div>
         </div>
     }
