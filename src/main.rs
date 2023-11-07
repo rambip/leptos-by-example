@@ -4,8 +4,10 @@ use leptos_router::*;
 mod examples;
 use examples::{examples, N_EXAMPLES};
 
+use std::rc::Rc;
+
 mod fuzzy;
-use fuzzy::FuzzyFinder;
+use fuzzy::{FuzzyFinder, FuzzyAble, SkimMatcherV2};
 
 use getrandom::getrandom;
 
@@ -15,12 +17,37 @@ static PUBLIC_DIR: &str = "leptos-by-example";
 
 #[derive(Clone)]
 struct Example {
+    pub name: &'static str,
+    pub source: &'static str,
     pub highlighted_source: &'static str,
     pub code: Signal<View>,
     pub css: Style,
     pub description: &'static str,
     pub motivation: &'static str,
     pub related: Option<&'static str>,
+}
+
+impl FuzzyAble for Rc<Example> {
+    fn name(&self) -> String {
+        self.name.to_string()
+    }
+
+    fn description(&self) -> String {
+        self.description.to_string()
+    }
+
+    fn score(&self, matcher: &SkimMatcherV2, request: &str) -> Option<i64> {
+        if let Some(s) = matcher.fuzzy(self.name, request, true){
+            return Some(s.0);
+        }
+        if let Some(s) = matcher.fuzzy(self.description, request, true){
+            return Some(s.0);
+        }
+        if let Some(s) = matcher.fuzzy(self.source, request, true){
+            return Some(s.0);
+        }
+        None
+    }
 }
 
 // wraps a function inside a signal.
@@ -117,9 +144,6 @@ fn App(examples: examples::Examples,
     let names: StoredValue<Vec<_>> = 
         store_value(examples.keys().cloned().collect());
 
-    let snippets: Vec<_> = examples.clone()
-        .into_iter().map(|(name, x)| (name.to_string(), store_value(x.description.to_owned())))
-        .collect();
 
     let key_handle = window_event_listener(ev::keypress, move |ev| {
         if ev.key() == "s" {
@@ -128,6 +152,7 @@ fn App(examples: examples::Examples,
     });
     on_cleanup(move || key_handle.remove());
 
+    let examples_list: Vec<Rc<_>> = examples.values().cloned().collect();
 
     view!{
         <h1 class="title">Leptos by example</h1>
@@ -135,7 +160,7 @@ fn App(examples: examples::Examples,
             <RandomSelector choice=move |i| set_current_name(names.with_value(|n| n[i])) n=N_EXAMPLES/>
             <FuzzyFinder 
                 placeholder="type `s` or click here to search example"
-                snippets=snippets 
+                items=examples_list
                 focus=searchbar_focus
                 choice=move |i| set_current_name(names.with_value(|n| n[i]))
             />

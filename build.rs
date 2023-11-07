@@ -108,26 +108,25 @@ fn read_examples(path: &Path,
             let example_name = Ident::new(&file_name, Span::call_site());
             let relative_path = format!("../examples/{file_name}.rs");
 
-
-            let highlighted_source = highlight(
+            let source = 
                 std::str::from_utf8(
                     &fs::read(f.path())?
-                ).unwrap()
-            );
+                ).unwrap().to_string();
+
+            let highlighted_source = highlight(&source);
 
             examples.extend(
                 quote!{
-                    (
-                        #file_name, 
-                        Example {
+                    Example {
+                        name: #file_name,
+                        source: #source,
                         highlighted_source: #highlighted_source,
                         code: pack_example(#example_name::showcase),
                         css: stylist::style!(#css).unwrap(),
                         description: #description,
                         motivation: #motivation,
                         related: #related,
-                    }
-                    ),
+                    },
                 }
             );
 
@@ -166,13 +165,14 @@ fn main() -> Result<(), io::Error> {
         use super::{Example, pack_example};
 
         pub const N_EXAMPLES: usize = #n_examples;
-        pub type Examples = std::collections::HashMap<&'static str, Example>;
+        pub type Examples = std::collections::HashMap<&'static str, std::rc::Rc<Example>>;
 
         pub fn examples() -> Examples {
             [
                 #examples
             ]
             .into_iter()
+            .map(|e| (e.name, std::rc::Rc::new(e)))
             .collect()
         }
     };

@@ -1,4 +1,4 @@
-use fuzzy_matcher::skim::SkimMatcherV2;
+pub use fuzzy_matcher::skim::SkimMatcherV2;
 
 use leptos::*;
 use leptos::html::Input;
@@ -6,9 +6,8 @@ use leptos::html::Input;
 #[component]
 fn ExampleMatch(
     name: String,
-    description: StoredValue<String>,
+    description: String,
     highlighted: bool,
-    matches: Vec<usize>,
     ) -> impl IntoView {
     // TODO: highlight `matches` in description
     view!{
@@ -18,20 +17,30 @@ fn ExampleMatch(
         }
 }
 
+pub trait FuzzyAble {
+    fn description(&self) -> String;
+    fn name(&self) -> String;
+    fn score(&self, matcher: &SkimMatcherV2, request: &str) -> Option<i64>;
+}
+
 #[component]
-pub fn FuzzyFinder<F: Fn(usize) + 'static> (
-    /// the (name, snippet) pairs to research into
-    snippets: Vec<(String, StoredValue<String>)>,
+pub fn FuzzyFinder<I: FuzzyAble + Clone + 'static, F> (
+    /// the items to research into
+    items: Vec<I>,
     /// the setter for the index of the item chosen by the user
     choice: F,
     focus: RwSignal<bool>,
     placeholder: &'static str,
-    ) -> impl IntoView 
+    ) 
+    -> impl IntoView 
+where F: Fn(usize) + 'static
 {
     // word written by the user
     let (request, set_request) = create_signal(String::new());
 
     let input_ref = create_node_ref::<Input>();
+
+    let snippets = store_value(items);
 
     create_effect(move |_| {
         if focus.get() {
@@ -53,32 +62,35 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
     // the index of the currently selected word
     let (highlighted, highlight) = create_signal(0);
 
-    let len = snippets.len();
-
-    let matcher = SkimMatcherV2::default();
+    let len = snippets.with_value(|s| s.len());
 
 
-    // `scores()[i]` contains the result of the matcher 
-    // when comparing `request` with `snippets[i].0`
-    let scores = create_memo({let snippets=snippets.clone(); move |_| snippets.clone()
-        .iter()
-        .map(|(_, description)| request.with(|r| description.with_value(|d| 
-                            matcher.fuzzy(d, r, true))
-        ))
-        .collect::<Vec<_>>()
-    });
 
-    let unwrapped_score = move |i: &usize| match scores()[*i] {
-        Some((score, _)) => -score,
-        None => panic!(),
-    };
+    let scores: Memo<Vec<_>> = create_memo(move |_| {
+        let matcher = SkimMatcherV2::default();
+        with!(|snippets| 
+             snippets.into_iter()
+            .map(|item| with!(|request| item.score(&matcher, request)))
+            .collect()
+            )
+        }
+    );
+
 
     // the indices of the snippets, but sorted
     // according to the match
-    let ordered_matches = create_memo(move |_| {
-        let mut result : Vec<usize> = (0..len).filter(|i| scores()[*i].is_some()).collect();
-        result.sort_by_key(unwrapped_score);
-        result
+    let ordered_matches : Memo<Vec<_>> = create_memo(move |_| {
+        let mut result : Vec<(usize, i64)> = (0..len)
+            .filter_map(|i| match scores()[i]{
+                Some(s) => Some((i, s)),
+                _ => None
+            })
+            .collect();
+
+        result.sort_by_key(|(_, score)| -score);
+        result.into_iter()
+            .map(|(i, _)| i)
+            .collect()
     });
 
     let confirm = Signal::derive(
@@ -87,15 +99,14 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
 
     // view of the matchs
     let match_list = Signal::derive(move || {
-        let snippets=snippets.clone();
+        let snippets = snippets();
         ordered_matches()
         .into_iter()
         .enumerate()
         .map(|(i, snippet_id)| view!{<ExampleMatch 
-            name=snippets[snippet_id].0.clone() 
-            description=snippets[snippet_id].1 
+            name=snippets[snippet_id].name()
+            description=snippets[snippet_id].description()
             highlighted={highlighted()==i}
-            matches=scores()[snippet_id].clone().unwrap().1
             on:mouseover=move |_| highlight(i)
             on:mousedown=move |_| {confirm(); focus.set(false)}
             />})
@@ -139,7 +150,8 @@ pub fn FuzzyFinder<F: Fn(usize) + 'static> (
 
                 prop:value=request
             />
-            // results are hidden if the search bar is not focused
+            // results are hidden if the search bar is not focused,
+            // or if no text is written
             <div style="position:absolute; background-color: white">
             {move || (!request().is_empty()).then(match_list)}
             </div>
