@@ -141,10 +141,6 @@ fn App(examples: examples::Examples,
     );
 
 
-    let names: StoredValue<Vec<_>> = 
-        store_value(examples.keys().cloned().collect());
-
-
     let key_handle = window_event_listener(ev::keypress, move |ev| {
         if ev.key() == "s" {
             searchbar_focus.set(true);
@@ -154,15 +150,21 @@ fn App(examples: examples::Examples,
 
     let examples_list: Vec<Rc<_>> = examples.values().cloned().collect();
 
+    let names : Vec<_> = examples.keys().cloned().collect();
+
+    let set_name = Callback::new(move |i| {
+        set_current_name(names[i])
+    });
+
     view!{
         <h1 class="title">Leptos by example</h1>
-        <div class="container">
-            <RandomSelector choice=move |i| set_current_name(names.with_value(|n| n[i])) n=N_EXAMPLES/>
+        <div class="container" clone:names>
+            <RandomSelector choice=set_name n=N_EXAMPLES/>
             <FuzzyFinder 
                 placeholder="type `s` or click here to search example"
                 items=examples_list
                 focus=searchbar_focus
-                choice=move |i| set_current_name(names.with_value(|n| n[i]))
+                choice=set_name
             />
             <b class="example-title">{current_name}</b>
             <ExampleView 
