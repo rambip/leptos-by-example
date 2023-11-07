@@ -85,25 +85,33 @@ fn random_small_int(n: usize) -> usize {
 }
 
 #[component]
-fn RandomSelector<F: Fn(usize) + 'static>(choice: F, n: usize) -> impl IntoView {
+fn Suggestions(
+    #[prop(into)]
+    choice: Callback<&'static str>,
+    examples: Vec<Rc<Example>>,
+    n: usize
+    ) -> impl IntoView {
     view!{
-        <button on:click=move |_| choice(random_small_int(n) as usize)>
+        <button on:click=move |_| choice(examples[random_small_int(n)].name)>
             random example
+        </button>
+        <button class="suggestion" on:click=move |_| choice("hello_world")>
+            hello world
         </button>
     }
 }
 
 #[component]
-fn ExampleView<F,I> (
-    examples: examples::Examples,
-    name: Signal<String>,
+fn ExampleView<F,I, 'a> (
+    example: Option<&'a Example>,
+    name: String,
     fallback: F
     ) -> impl IntoView 
     where F: Fn(String) -> I + 'static,
-          I: IntoView
+          I: IntoView + 'a
 
 {
-    move || match examples.get(&name() as &str) {
+    match example {
         Some(e) => view!{
             // the code
             <div class="code-snippet" inner_html=e.highlighted_source></div>
@@ -113,7 +121,7 @@ fn ExampleView<F,I> (
             </div>
             <Documentation example=e/>
         }.into_view(),
-        None => fallback(name()).into_view()
+        None => fallback(name).into_view()
     }
 }
 
@@ -125,15 +133,13 @@ fn App(examples: examples::Examples,
     let location = use_location();
     let current_name = move ||
         match &location.hash.get().chars().collect::<Vec<_>>()[..] {
-            [] => default.to_string(),
-            ['#'] => default.to_string(),
-            ['#', rest @ ..] => rest.into_iter().collect(),
+            [] => None,
+            ['#'] => Some(default.to_string()),
+            ['#', rest @ ..] => Some(rest.into_iter().collect()),
             _ => unreachable!()
     };
 
     let searchbar_focus = create_rw_signal(false);
-
-    create_effect(move |_| logging::log!("current name is {}", current_name()));
 
     let navigate = leptos_router::use_navigate();
     let set_current_name = Callback::new(
@@ -159,19 +165,27 @@ fn App(examples: examples::Examples,
     view!{
         <h1 class="title">Leptos by example</h1>
         <div class="container" clone:names>
-            <RandomSelector choice=set_name n=N_EXAMPLES/>
             <FuzzyFinder 
                 placeholder="type `s` or click here to search example"
-                items=examples_list
+                items=examples_list.clone()
                 focus=searchbar_focus
                 choice=set_name
             />
-            <b class="example-title">{current_name}</b>
-            <ExampleView 
-                examples=examples 
-                name=current_name.into_signal()
-                fallback=move |x| view!{<div>example {x} does not exist</div>}
-            />
+            {move || match current_name(){
+                Some(name) => view!{
+                    <b class="example-title">{name.clone()}</b>
+                    <ExampleView 
+                        example=examples.get(name.as_str()).map(|x| x.as_ref())
+                        name=name
+                        fallback=move |x| view!{<div>example {x} does not exist</div>}
+                    />
+                }.into_view(),
+                None => view!{<Suggestions 
+                    choice=set_current_name 
+                    examples=examples_list.clone()
+                    n=N_EXAMPLES/>
+                }.into_view()
+            }}
         </div>
     }
 }
